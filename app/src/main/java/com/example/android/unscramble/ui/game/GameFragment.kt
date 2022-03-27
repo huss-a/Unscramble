@@ -20,6 +20,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.android.unscramble.R
@@ -45,18 +46,20 @@ class GameFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         // Inflate the layout XML file and return a binding object instance
-        binding = GameFragmentBinding.inflate(inflater, container, false)
+        binding = DataBindingUtil.inflate(inflater, R.layout.game_fragment, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.gameViewModel = viewModel
+        binding.maxNoOfWords = MAX_NO_OF_WORDS
+        binding.lifecycleOwner = viewLifecycleOwner
+
         // Setup a click listener for the Submit and Skip buttons.
         binding.submit.setOnClickListener { onSubmitWord() }
         binding.skip.setOnClickListener { onSkipWord() }
-        // Update the UI
-        updateScreen()
     }
 
     /**
@@ -68,7 +71,6 @@ class GameFragment : Fragment() {
             // return and show Finish Game Dialog if MAX_NO_OF_WORDS reached
             if (!viewModel.nextWord()) return showFinishGameDialog()
             setErrorTextField(false)
-            updateScreen()
         } else setErrorTextField(true)
     }
 
@@ -80,7 +82,6 @@ class GameFragment : Fragment() {
         // return and show Finish Game Dialog if MAX_NO_OF_WORDS reached
         if (!viewModel.nextWord()) return showFinishGameDialog()
         setErrorTextField(false)
-        updateScreen()
     }
 
     /**
@@ -90,7 +91,6 @@ class GameFragment : Fragment() {
     private fun restartGame() {
         viewModel.resetProperties()
         setErrorTextField(false)
-        updateScreen()
     }
 
     /**
@@ -120,22 +120,12 @@ class GameFragment : Fragment() {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(getString(R.string.congratulations))
             .setCancelable(false)
-            .setMessage(getString(R.string.you_scored, viewModel.score))
+            .setMessage(getString(R.string.you_scored, viewModel.score.value))
             .setNegativeButton(R.string.exit) { _, _ ->
                 exitGame()
             }
             .setPositiveButton(R.string.play_again) { _, _ ->
                 restartGame()
             }.show()
-    }
-
-    /**
-     * Update the UI with viewModel properties/
-     */
-    private fun updateScreen() {
-        binding.textViewUnscrambledWord.text = viewModel.currentScrambledWord
-        binding.score.text = getString(R.string.score, viewModel.score)
-        binding.wordCount.text =
-            getString(R.string.word_count, viewModel.currentWordCount, MAX_NO_OF_WORDS)
     }
 }
